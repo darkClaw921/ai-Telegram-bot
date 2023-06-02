@@ -237,14 +237,23 @@ class Ydb:
         return rez  
     
     def get_model_url(self,modelName: str):
-        modelUrl = self.select_query('model', f'model = "{modelName}"')[0]['url']
-        print('modelURL= ', modelUrl)
-        return modelUrl.decode('utf-8')
-    
+        try: 
+            modelUrl = self.select_query('model', f'model = "{modelName}"')[0]['url']
+            modelUrl= modelUrl.decode('utf-8')
+        except:
+            modelUrl = None
+        print(f'{modelUrl=}')
+        return modelUrl
+     
     def get_promt_url(self,promtName: str):
-        promtUrl = self.select_query('prompt', f'promt = "{promtName}"')[0]['url']
+        try:
+            promtUrl = self.select_query('prompt', f'promt = "{promtName}"')[0]['url']
+            promtUrl = promtUrl.decode('utf-8')
+        except:
+            promtUrl = None
+
         print(f'{promtUrl=}')
-        return promtUrl.decode('utf-8')
+        return promtUrl
     
     def get_model_for_user(self,userID: int):
         try:
@@ -266,9 +275,13 @@ class Ydb:
         return promt
     
     def get_models(self,):
-        model = self.custom_select_query('model', f'*')
-        print('model= ', model)
-        return model
+        models = self.custom_select_query('model', 'model')
+        print(f'{models=}')
+        modelReturn = []
+        for model in models:
+            a = model['model'].decode('utf-8')
+            modelReturn.append(a)
+        return modelReturn
     
     def get_promts(self):
         promts = self.custom_select_query('prompt', 'promt')

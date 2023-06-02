@@ -28,7 +28,7 @@ sql = workYDB.Ydb()
 
 
 
-@bot.message_handler(commands=['addmodel'])
+@bot.message_handler(commands=['addmodel1'])
 def add_new_model(message):
     sql.set_payload(message.chat.id, 'addmodel')
     bot.send_message(message.chat.id, 
@@ -65,11 +65,14 @@ def send_button(message):
     bot.send_message(message.chat.id, 
         "Контекст сброшен",)
 
-@bot.message_handler(commands=['model'])
+@bot.message_handler(commands=['model1'])
 def select_model(message):
     #payload = sql.get_payload(message.chat.id)
+    models= sql.get_models()
+    print(models)
+    keyboard = create_keyboard_is_row(models)
     sql.set_payload(message.chat.id, 'model')
-    bot.send_message(message.chat.id,'Выберите модель',)
+    bot.send_message(message.chat.id,'Выберите модель',reply_markup=keyboard)
 
 @bot.message_handler(commands=['promt'])
 def select_promt(message):
@@ -95,8 +98,9 @@ def any_message(message):
 
     modelIndexUser = sql.get_model_for_user(userID)
     promtUser = sql.get_promt_for_user(userID)
-    modelIndex = sql.get_model_url(modelIndexUser)
-    promt= sql.get_promt_url(promtUser)
+    modelIndexUrl = sql.get_model_url(modelIndexUser)
+    promtUrl = sql.get_promt_url(promtUser)
+
     if payload == 'addmodel':
         text = text.split(' ')
         rows = {'model': text[1], 'url': text[0] }
@@ -110,7 +114,7 @@ def any_message(message):
         return 0
     
     if payload == 'promt':
-        promtUrl = sql.get_promt_url(text)
+        #promtUrl = sql.get_promt_url(text)
         sql.set_payload(message.chat.id, '')
         row = {'id': message.chat.id, 'promt':text}
         sql.replace_query('user', row)
@@ -118,8 +122,11 @@ def any_message(message):
 
     if payload == 'model':     
         modelUrl = sql.get_model_url(text)
-        #model_index=gpt.load_search_indexes(modelUrl)
         sql.set_payload(message.chat.id, '')
+        row = {'id': message.chat.id, 'model':text}
+        sql.replace_query('user', row)
+        #model_index=gpt.load_search_indexes(modelUrl)
+        #sql.set_payload(message.chat.id, '')
         return 0
         
    
@@ -136,11 +143,15 @@ def any_message(message):
     #mess = [{
     #    'role': 'system', 'content': model
     #}]
-    if promt is not None and modelIndex is not None:
+    if promtUrl is not None and modelIndexUrl is not None:
+        promt = gpt.load_prompt(promtUrl)
+        modelIndex = gpt.load_search_indexes(modelIndexUrl)
         answer = gpt.answer_index(promt, text, history, modelIndex)
-    elif promt is not None:
+    elif promtUrl is not None:
+        promt = gpt.load_prompt(promtUrl)
         answer = gpt.answer(promt, history=history)
-    elif modelIndex is not None:
+    elif modelIndexUrl is not None:
+        modelIndex = gpt.load_search_indexes(modelIndexUrl)
         answer = gpt.answer(modelIndex, history=history)
 
 
