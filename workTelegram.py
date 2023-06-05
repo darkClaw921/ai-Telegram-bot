@@ -28,7 +28,7 @@ sql = workYDB.Ydb()
 
 
 
-@bot.message_handler(commands=['addmodel1'])
+@bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
     sql.set_payload(message.chat.id, 'addmodel')
     bot.send_message(message.chat.id, 
@@ -65,11 +65,11 @@ def send_button(message):
     bot.send_message(message.chat.id, 
         "Контекст сброшен",)
 
-@bot.message_handler(commands=['model1'])
+@bot.message_handler(commands=['model'])
 def select_model(message):
     #payload = sql.get_payload(message.chat.id)
     models= sql.get_models()
-    print(models)
+    #print(models)
     keyboard = create_keyboard_is_row(models)
     sql.set_payload(message.chat.id, 'model')
     bot.send_message(message.chat.id,'Выберите модель',reply_markup=keyboard)
@@ -78,7 +78,7 @@ def select_model(message):
 def select_promt(message):
     #payload = sql.get_payload(message.chat.id)
     promts = sql.get_promts()
-    print(promts)
+    #print(promts)
     keyboard = create_keyboard_is_row(promts)
     sql.set_payload(message.chat.id, 'promt')
     bot.send_message(message.chat.id,'Выберите промт',reply_markup=keyboard)
@@ -116,15 +116,16 @@ def any_message(message):
     if payload == 'promt':
         #promtUrl = sql.get_promt_url(text)
         sql.set_payload(message.chat.id, '')
-        row = {'id': message.chat.id, 'promt':text}
-        sql.replace_query('user', row)
+        row = {'promt':text}
+        sql.update_query('user', row, f'id={userID}')
+        #sql.replace_query('user', row)
         return 0
 
     if payload == 'model':     
         modelUrl = sql.get_model_url(text)
         sql.set_payload(message.chat.id, '')
-        row = {'id': message.chat.id, 'model':text}
-        sql.replace_query('user', row)
+        row = {'model':text}
+        sql.update_query('user', row, f'id={userID}')
         #model_index=gpt.load_search_indexes(modelUrl)
         #sql.set_payload(message.chat.id, '')
         return 0
@@ -132,17 +133,10 @@ def any_message(message):
    
     add_message_to_history(userID, 'user', text)
     history = get_history(str(userID))
-    #print('context2', context + f'клиент: {text}')
-    #model= gpt.load_prompt('https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing')
-    #model= gpt.load_prompt(get_model_url(payload))
-    #model = 
-    #answer = gpt.answer(model, text, temp = 0.1)
-    #model= gpt.load_prompt(get_model_url(payload))
-    #testModel = sql.get_model_url('model1')
     
-    #mess = [{
-    #    'role': 'system', 'content': model
-    #}]
+    #print(f'{promtUrl=}')
+    #print(f'{modelIndexUrl=}')
+    print(f'{history}')
     if promtUrl is not None and modelIndexUrl is not None:
         promt = gpt.load_prompt(promtUrl)
         modelIndex = gpt.load_search_indexes(modelIndexUrl)
@@ -151,13 +145,17 @@ def any_message(message):
         promt = gpt.load_prompt(promtUrl)
         answer = gpt.answer(promt, history=history)
     elif modelIndexUrl is not None:
-        modelIndex = gpt.load_search_indexes(modelIndexUrl)
+        modelIndex = gpt.load_prompt(modelIndexUrl)
+        #modelIndex = gpt.load_search_indexes(modelIndexUrl)
         answer = gpt.answer(modelIndex, history=history)
 
-
+    #try:
     add_message_to_history(userID, 'assistant', answer)
     bot.send_message(message.chat.id, answer)
     
+    #except Exception as e:
+    #    bot.send_message('?')
+
 bot.infinity_polling()
     #answer = gpt.answer(model, history)
     #answer = gpt.answer_index(model, text, model_index,)

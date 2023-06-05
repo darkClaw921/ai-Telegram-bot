@@ -18,6 +18,7 @@ import os
 import openai
 import tiktoken
 import re
+from pprint import pprint 
 
 
 class bcolors:
@@ -171,7 +172,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
       #{"role": "user", "content": context}
       ]
     messages.extend(history)
-
+    pprint(messages)
     # example token count from the function defined above
     if (verbose): print('\n ===========================================: ')
     if (verbose): print(f"{self.num_tokens_from_messages(messages, 'gpt-3.5-turbo-0301')} токенов использовано на вопрос")
