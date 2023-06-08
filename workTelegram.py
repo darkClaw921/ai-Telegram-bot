@@ -136,7 +136,7 @@ def any_message(message):
     
     #print(f'{promtUrl=}')
     #print(f'{modelIndexUrl=}')
-    print(f'{history}')
+    #print(f'{history}')
     try:
         if promtUrl is not None and modelIndexUrl is not None:
             promt = gpt.load_prompt(promtUrl)
@@ -149,8 +149,31 @@ def any_message(message):
             modelIndex = gpt.load_prompt(modelIndexUrl)
             #modelIndex = gpt.load_search_indexes(modelIndexUrl)
             answer = gpt.answer(modelIndex, history=history)
+        #bot.send_message(userID, answer)
+        #return 0
     except Exception as e:
+        history = get_history(str(userID))
+        history.pop(1)
+        history.pop(1)
+        history.pop(1)
+        history.pop(1)
+        add_old_history(userID,history)
+        print(f'{history}=') 
+        if promtUrl is not None and modelIndexUrl is not None:
+            promt = gpt.load_prompt(promtUrl)
+            modelIndex = gpt.load_search_indexes(modelIndexUrl)
+            answer = gpt.answer_index(promt, text, history, modelIndex)
+        elif promtUrl is not None:
+            promt = gpt.load_prompt(promtUrl)
+            answer = gpt.answer(promt, history=history)
+        elif modelIndexUrl is not None:
+            modelIndex = gpt.load_prompt(modelIndexUrl)
+            #modelIndex = gpt.load_search_indexes(modelIndexUrl)
+            answer = gpt.answer(modelIndex, history=history)
         bot.send_message(userID, e)
+        
+        #return 0
+    #bot.send_message(userID, answer)
     #try:
     add_message_to_history(userID, 'assistant', answer)
     bot.send_message(message.chat.id, answer)
