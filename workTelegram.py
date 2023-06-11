@@ -9,6 +9,11 @@ import json
 from helper import *
 from workRedis import *
 from createKeyboard import *
+from loguru import logger
+import sys
+
+logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+logger.add("file_1.log", rotation="50 MB")
 
 load_dotenv()
 
@@ -122,7 +127,7 @@ def any_message(message):
         return 0
 
     if payload == 'model':     
-        modelUrl = sql.get_model_url(text)
+        #modelUrl = sql.get_model_url(text)
         sql.set_payload(message.chat.id, '')
         row = {'model':text}
         sql.update_query('user', row, f'id={userID}')
@@ -134,8 +139,8 @@ def any_message(message):
     add_message_to_history(userID, 'user', text)
     history = get_history(str(userID))
     
-    #print(f'{promtUrl=}')
-    #print(f'{modelIndexUrl=}')
+    logger.info(f'{promtUrl=}')
+    logger.info(f'{modelIndexUrl=}')
     #print(f'{history}')
     try:
         if promtUrl is not None and modelIndexUrl is not None:
@@ -152,13 +157,22 @@ def any_message(message):
         #bot.send_message(userID, answer)
         #return 0
     except Exception as e:
+        bot.send_message(userID, e)
+        bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
-        history.pop(1)
-        history.pop(1)
-        history.pop(1)
-        history.pop(1)
+        summaryHistory = gpt.get_summary(history)
+        logger.info(f'summary истории {summaryHistory}')
+        #print(f'summary: {summaryHistory}')
+        logger.info(f'история до summary {history}')
+        #print('история до очистки \n', history)
+        #print('история summary \n', summaryHistory)
+        #clear_history(userID)
+        history = [summaryHistory]
+        history.extend([{'role':'user', 'content': text}])
         add_old_history(userID,history)
-        print(f'{history}=') 
+        history = get_history(str(userID))
+        logger.info(f'история после summary {history}')
+
         if promtUrl is not None and modelIndexUrl is not None:
             promt = gpt.load_prompt(promtUrl)
             modelIndex = gpt.load_search_indexes(modelIndexUrl)
@@ -170,14 +184,15 @@ def any_message(message):
             modelIndex = gpt.load_prompt(modelIndexUrl)
             #modelIndex = gpt.load_search_indexes(modelIndexUrl)
             answer = gpt.answer(modelIndex, history=history)
-        bot.send_message(userID, e)
+        #bot.send_message(userID, e)
         
-        #return 0
+        #   return 0
     #bot.send_message(userID, answer)
     #try:
     add_message_to_history(userID, 'assistant', answer)
     bot.send_message(message.chat.id, answer)
-    
+    #b = gpt.get_summary(history)
+    #print(f'{b=}')
     #except Exception as e:
     #    bot.send_message('?')
 

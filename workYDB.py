@@ -2,6 +2,13 @@ import os
 import ydb
 import ydb.iam
 from dotenv import load_dotenv
+
+from loguru import logger
+import sys
+
+logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+logger.add("file_1.log", rotation="50 MB")
+
 load_dotenv()
 
 driver = ydb.Driver(
@@ -48,7 +55,8 @@ class Ydb:
         value = value[:-1] + ')'
         # values_placeholder_format = ', '.join(my_list)
         query = f"REPLACE INTO {tableName} ({fields_format}) VALUES {value}"
-        print(query)
+        #print(query)
+        logger.info(query)
 
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
@@ -81,6 +89,7 @@ class Ydb:
         # values_placeholder_format = ', '.join(my_list)
         query = f'UPDATE {tableName} SET {sets} WHERE {where}'
         # query = f"INSERT INTO {tableName} ({fields_format}) " \
+        logger.info(query)
         #print(query)
 
         def a(session):
@@ -93,6 +102,7 @@ class Ydb:
     def delete_query(self, tableName: str, where: str):
         # 'where id > 20 '
         query = f"DELETE FROM `{tableName}` WHERE {where}"
+        logger.info(query)
         #print(query)
 
         def a(session):
@@ -105,10 +115,12 @@ class Ydb:
     def create_table(self, tableName: str, fields: dict):
         # fields = {'id': 'Uint64', 'name': 'String', 'age': 'Uint64'}
         query = f"CREATE TABLE `{tableName}` ("
+        logger.info(query)
         for key, value in fields.items():
             query += f'{key} {value},'
 
         query = query[:-1] + ', PRIMARY KEY (id) ) '
+        logger.info(query)
         #print('CREATE TABLE',tableName)
         print(query)
         def a(session):
@@ -140,7 +152,8 @@ class Ydb:
         value = value[:-1] + ')'
         # values_placeholder_format = ', '.join(my_list)
         query = f"INSERT INTO `{tableNameUserID}` ({fields_format}) VALUES {value}"
-        print(query)
+        logger.info(query)
+        #print(query)
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
             #session(ydb.SerializableReadWrite()).execute(
@@ -151,6 +164,7 @@ class Ydb:
 
     def get_context(self, tableNameUserID: str, whereModelDialog: str):
         query = f"""SELECT * FROM `{tableNameUserID}` where MODEL_DIALOG = "{whereModelDialog}" """
+        logger.info(query)
         #print(query)
         def a(session):
             return session.transaction().execute(
@@ -166,12 +180,14 @@ class Ydb:
         context = ''
         for i in rez:
             context += i['TEXT'].decode('utf-8')+ '\n'
-        print('context',context)
+        #print('context',context)
+        logger.info(f'contextREZ={context}')
         return context
     
     def set_payload(self, userID: int, payload: str):
         query = f'UPDATE user SET payload = "{payload}" WHERE id = {userID}'
         #print(query)
+        logger.info(query)
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
                 query,
@@ -181,7 +197,8 @@ class Ydb:
 
     def get_payload(self, whereID: int):
         query = f'SELECT payload FROM user WHERE id = {whereID}'
-        print(query)
+        logger.info(query)
+        #print(query)
 
         def a(session):
             return session.transaction().execute(
@@ -202,6 +219,7 @@ class Ydb:
     def select_query(self,tableName: str, where: str):
         # 'where id > 20 '
         query = f'SELECT * FROM {tableName} WHERE {where}'
+        logger.info(query)
         #print(query)
 
         def a(session):
@@ -221,7 +239,8 @@ class Ydb:
         # 'where id > 20 '
        
         query = f'SELECT {select} FROM {tableName}' 
-        print(query)
+        logger.info(query)
+        #print(query)
 
         def a(session):
             return session.transaction().execute(
@@ -234,6 +253,7 @@ class Ydb:
         #print('b',b)
         rez = b[0].rows
         print('rez',rez)
+        logger.info(f'custom = {rez}')
         return rez  
     
     def get_model_url(self,modelName: str):
@@ -242,7 +262,7 @@ class Ydb:
             modelUrl= modelUrl.decode('utf-8')
         except:
             modelUrl = None
-        print(f'{modelUrl=}')
+        logger.info(f'{modelUrl=}')
         return modelUrl
      
     def get_promt_url(self,promtName: str):
@@ -252,7 +272,7 @@ class Ydb:
         except:
             promtUrl = None
 
-        print(f'{promtUrl=}')
+        logger.info(f'{promtUrl=}')
         return promtUrl
     
     def get_model_for_user(self,userID: int):
@@ -260,7 +280,7 @@ class Ydb:
             model = self.select_query('user', f'id = {userID}')[0]['model'].decode('utf-8')
         except:
             model = None
-        print('model= ', model)
+        logger.info(f'{model=}')
         return model
     
     def get_promt_for_user(self,userID: int):
@@ -270,13 +290,13 @@ class Ydb:
             promt = promt.decode('utf-8')
         except:
             promt = None
-        print(f'{promt=}')
+        logger.info(f'{promt=}')
         
         return promt
     
     def get_models(self,):
         models = self.custom_select_query('model', 'model')
-        print(f'{models=}')
+        #print(f'{models=}')
         modelReturn = []
         for model in models:
             a = model['model'].decode('utf-8')
@@ -285,7 +305,7 @@ class Ydb:
     
     def get_promts(self):
         promts = self.custom_select_query('prompt', 'promt')
-        print(f'{promts=}')
+        #print(f'{promts=}')
         promtReturn = []
         for promt in promts:
             a = promt['promt'].decode('utf-8')
