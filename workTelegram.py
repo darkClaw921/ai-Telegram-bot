@@ -52,10 +52,10 @@ def say_welcome(message):
     #sql.create_table(str(message.chat.id), row)
     #row = {'id': message.chat.id, 'payload': '',}
     #sql.replace_query('user', row)
-    bot.send_message(message.chat.id,'/addmodel добавление новой модели\n/model1 - модель 1 Просто обычный чат /context сбросит контекст по текущей модели\nДоюавление моделей кроме model1 пока нельзя\n/restart перезапись главного документа', 
+    bot.send_message(message.chat.id,'/allcontext очистка моделей, промта и истории\n/addmodel добавление новой модели\n/model1 - модель 1 Просто обычный чат /context сбросит контекст по текущей модели\nДоюавление моделей кроме model1 пока нельзя\n/restart перезапись главного документа', 
                      parse_mode='markdown')
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
-@bot.message_handler(commands=['context'])
+@bot.message_handler(commands=['allcontext'])
 def send_button(message):
     #payload = sql.get_payload(message.chat.id)
     
@@ -68,7 +68,20 @@ def send_button(message):
     #bot.send_message(message.chat.id, answer)
     clear_history(message.chat.id)
     bot.send_message(message.chat.id, 
-        "Контекст сброшен",)
+        "Весь контекст сброшен",)
+
+@bot.message_handler(commands=['context'])
+def send_button(message):
+    #payload = sql.get_payload(message.chat.id)
+    #answer = gpt.answer(validation_promt, context, temp = 0.1)
+    #sql.delete_query(message.chat.id, f'MODEL_DIALOG = "{payload}"')
+    #sql.set_payload(message.chat.id, ' ')
+    #row = {'id': message.chat.id, 'model':'', 'promt':''}
+    #sql.replace_query('user', row)
+    #bot.send_message(message.chat.id, answer)
+    clear_history(message.chat.id)
+    bot.send_message(message.chat.id, 
+        "Текущий контекст сброшен",)
 
 @bot.message_handler(commands=['model'])
 def select_model(message):
